@@ -1,40 +1,38 @@
 
 import React, { useState } from 'react';
-import { mockDb } from '../services/mockFirebase';
-import { COLORS } from '../constants';
+import { auth } from '../lib/firebase';
+import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 interface LoginProps {
   onLogin: () => void;
+  onShowRegister: () => void;
 }
 
-export const Login: React.FC<LoginProps> = ({ onLogin }) => {
+export const Login: React.FC<LoginProps> = ({ onLogin, onShowRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    setTimeout(() => {
-      const users = mockDb.getUsers();
-      const user = users.find(u => u.email === email.toLowerCase());
-      
-      if (user) {
-        mockDb.setCurrentUser(user);
-        onLogin();
-      } else {
-        setError('Invalid credentials. Please click one of the demo accounts below.');
-      }
+    try {
+      await signInWithEmailAndPassword(auth, email.toLowerCase(), password);
+      onLogin();
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Invalid credentials. Please check your email and password.');
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   const quickSelect = (e: string) => {
     setEmail(e);
-    setPassword('demopass');
+    setPassword('demopass123');
   };
 
   return (
@@ -77,43 +75,27 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1A73E8] focus:border-transparent outline-none transition-all"
               placeholder="••••••••"
             />
-            <p className="text-[10px] text-gray-400 mt-1 ml-1">* Use any password for demo accounts</p>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#1A73E8] text-white py-4 rounded-xl font-bold text-lg hover:shadow-lg hover:shadow-blue-200 active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100"
+            className="w-full bg-[#1A73E8] text-white py-4 rounded-xl font-bold text-lg hover:shadow-lg hover:shadow-blue-200 active:scale-95 transition-all disabled:opacity-50"
           >
             {loading ? 'Processing...' : 'Sign In'}
           </button>
         </form>
 
-        <div className="mt-8 p-6 bg-gray-50 rounded-2xl border border-gray-100">
-          <p className="text-sm font-bold text-gray-900 mb-3 text-center uppercase tracking-wider">Quick Demo Login</p>
-          <div className="grid grid-cols-1 gap-2">
+        <div className="mt-8 text-center">
+          <p className="text-sm text-gray-500">
+            Don't have an account?{' '}
             <button 
-              onClick={() => quickSelect('admin@city.gov')}
-              className="flex items-center justify-between px-4 py-2 bg-white border border-gray-200 rounded-xl hover:border-[#1A73E8] transition-all group"
+              onClick={onShowRegister}
+              className="text-[#1A73E8] font-bold hover:underline"
             >
-              <span className="text-sm font-medium text-gray-700">Municipal Admin</span>
-              <span className="text-xs text-[#1A73E8] font-bold group-hover:underline">Select</span>
+              Sign Up
             </button>
-            <button 
-              onClick={() => quickSelect('rajesh@clean.com')}
-              className="flex items-center justify-between px-4 py-2 bg-white border border-gray-200 rounded-xl hover:border-[#34A853] transition-all group"
-            >
-              <span className="text-sm font-medium text-gray-700">Field Sweeper</span>
-              <span className="text-xs text-[#34A853] font-bold group-hover:underline">Select</span>
-            </button>
-            <button 
-              onClick={() => quickSelect('john@example.com')}
-              className="flex items-center justify-between px-4 py-2 bg-white border border-gray-200 rounded-xl hover:border-[#FBBC05] transition-all group"
-            >
-              <span className="text-sm font-medium text-gray-700">Citizen User</span>
-              <span className="text-xs text-[#FBBC05] font-bold group-hover:underline">Select</span>
-            </button>
-          </div>
+          </p>
         </div>
       </div>
     </div>

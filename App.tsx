@@ -1,9 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { mockDb } from './services/mockFirebase';
+import { auth } from './lib/firebase';
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { firebaseService } from './services/firebaseService';
 import { User } from './types';
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
+import { Register } from './pages/Register';
 import { CitizenDashboard } from './pages/CitizenDashboard';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { SweeperDashboard } from './pages/SweeperDashboard';
@@ -11,20 +14,27 @@ import { SweeperDashboard } from './pages/SweeperDashboard';
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState<'login' | 'register'>('login');
 
   useEffect(() => {
-    const user = mockDb.getCurrentUser();
-    setCurrentUser(user);
-    setLoading(false);
+    // Listen for real Firebase Auth changes
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      if (fbUser) {
+        const userProfile = await firebaseService.getUser(fbUser.uid);
+        setCurrentUser(userProfile);
+      } else {
+        setCurrentUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const handleLogin = () => {
-    setCurrentUser(mockDb.getCurrentUser());
-  };
-
-  const handleLogout = () => {
-    mockDb.setCurrentUser(null);
+  const handleLogout = async () => {
+    await signOut(auth);
     setCurrentUser(null);
+    setView('login');
   };
 
   if (loading) {
@@ -36,7 +46,20 @@ const App: React.FC = () => {
   }
 
   if (!currentUser) {
-    return <Login onLogin={handleLogin} />;
+    if (view === 'register') {
+      return (
+        <Register 
+          onRegister={() => {}} // State handled by onAuthStateChanged
+          onShowLogin={() => setView('login')} 
+        />
+      );
+    }
+    return (
+      <Login 
+        onLogin={() => {}} // State handled by onAuthStateChanged
+        onShowRegister={() => setView('register')} 
+      />
+    );
   }
 
   return (

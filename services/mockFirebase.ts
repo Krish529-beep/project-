@@ -1,22 +1,59 @@
 
 import { User, Complaint, VolunteerEvent, Role } from '../types';
 
-// Storage Keys
+/**
+ * DATABASE INTEGRATION GUIDE:
+ * 
+ * 1. FIREBASE AUTH:
+ *    - Replace `getCurrentUser` with `auth.currentUser` or `onAuthStateChanged`.
+ *    - Sign-in/Sign-up should use `signInWithEmailAndPassword` or `createUserWithEmailAndPassword`.
+ * 
+ * 2. FIRESTORE (Database):
+ *    - Replace `localStorage` calls with `getDoc`, `getDocs`, `setDoc`, and `addDoc`.
+ *    - Use Firestore Collections: 'users', 'complaints', and 'volunteer_events'.
+ *    - Use `where` queries for role-based filtering and status tracking.
+ * 
+ * 3. FIREBASE STORAGE (Images):
+ *    - Complaints images (before/after) should be uploaded to Storage.
+ *    - Use `ref(storage, `complaints/${id}/before.jpg`)` and `uploadString(ref, data, 'data_url')`.
+ *    - Store the resulting `downloadURL` in the Firestore document.
+ */
+
+// Storage Keys for local simulation
 const USERS_KEY = 'swachhsnap_users';
 const COMPLAINTS_KEY = 'swachhsnap_complaints';
 const EVENTS_KEY = 'swachhsnap_events';
 const CURRENT_USER_KEY = 'swachhsnap_current_user';
 
 export const mockDb = {
+  /**
+   * FIRESTORE: collection(db, 'users')
+   * Fetch user profiles. In real Firebase, you'd usually fetch by UID.
+   */
   getUsers: (): User[] => JSON.parse(localStorage.getItem(USERS_KEY) || '[]'),
   setUsers: (users: User[]) => localStorage.setItem(USERS_KEY, JSON.stringify(users)),
   
+  /**
+   * FIRESTORE: collection(db, 'complaints')
+   * Queries:
+   * - Admin: Fetch all sorted by createdAt
+   * - Sweeper: query(collection, where('assignedSweeperId', '==', uid))
+   * - Citizen: query(collection, where('userId', '==', uid))
+   */
   getComplaints: (): Complaint[] => JSON.parse(localStorage.getItem(COMPLAINTS_KEY) || '[]'),
   setComplaints: (complaints: Complaint[]) => localStorage.setItem(COMPLAINTS_KEY, JSON.stringify(complaints)),
   
+  /**
+   * FIRESTORE: collection(db, 'volunteer_events')
+   * Events for community cleanups.
+   */
   getEvents: (): VolunteerEvent[] => JSON.parse(localStorage.getItem(EVENTS_KEY) || '[]'),
   setEvents: (events: VolunteerEvent[]) => localStorage.setItem(EVENTS_KEY, JSON.stringify(events)),
   
+  /**
+   * FIREBASE AUTH: auth.onAuthStateChanged((user) => ...)
+   * Tracks the currently logged in session.
+   */
   getCurrentUser: (): User | null => {
     const data = localStorage.getItem(CURRENT_USER_KEY);
     return data ? JSON.parse(data) : null;
@@ -27,7 +64,11 @@ export const mockDb = {
   }
 };
 
-// Initial Setup for Demo
+/**
+ * SEED DATA: 
+ * This block simulates the initial state of a database.
+ * In production, you would manually add these via the Firebase Console.
+ */
 if (mockDb.getUsers().length === 0) {
   const initialUsers: User[] = [
     { uid: 'admin-1', name: 'Munish Admin', email: 'admin@city.gov', role: 'admin', createdAt: Date.now() },
