@@ -7,11 +7,22 @@
     <title>SwachhSnap - Clean City, Better Life</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Google Maps API - Key should be provided by environment or added here -->
+    <script src="https://maps.googleapis.com/maps/api/js?libraries=places"></script>
     <style>
         body {
             font-family: 'Roboto', sans-serif;
             background-color: #F8F9FA;
             color: #202124;
+        }
+        /* Fix for Google Maps infowindow buttons */
+        .gm-style .gm-style-iw-c {
+            padding: 0 !important;
+            border-radius: 1rem !important;
+        }
+        .gm-style .gm-style-iw-d {
+            overflow: hidden !important;
+            padding: 0 !important;
         }
     </style>
 <script type="importmap">
