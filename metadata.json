@@ -1,0 +1,8 @@
+{
+  "name": "Copy of Copy of Copy of SwachhSnap",
+  "description": "A civic-tech platform for reporting public issues via live camera images with automatic location capture and role-based resolution tracking.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
